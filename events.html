@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Eventos — AWS Student Builder Group</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ─── TOKENS ────────────────────────────────────────────── */
+    :root {
+      --bg:           #08080F;
+      --bg-card:      #0E0E1C;
+      --bg-elevated:  #13132A;
+      --border:       rgba(255, 255, 255, 0.06);
+      --border-med:   rgba(255, 255, 255, 0.10);
+      --border-hi:    rgba(255, 255, 255, 0.18);
+      --purple:       #A855F7;
+      --purple-soft:  rgba(168, 85, 247, 0.12);
+      --purple-glow:  rgba(168, 85, 247, 0.30);
+      --orange:       #F97316;
+      --orange-soft:  rgba(249, 115, 22, 0.12);
+      --orange-glow:  rgba(249, 115, 22, 0.30);
+      --cyan:         #67E8F9;
+      --green:        #4ADE80;
+      --text:         #E2E8F0;
+      --text-dim:     #94A3B8;
+      --text-muted:   #475569;
+      --mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+      --sans: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    /* ─── RESET ─────────────────────────────────────────────── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--sans);
+      background-color: var(--bg);
+      background-image:
+        linear-gradient(rgba(168, 85, 247, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(168, 85, 247, 0.035) 1px, transparent 1px);
+      background-size: 40px 40px;
+      color: var(--text);
+      line-height: 1.65;
+      overflow-x: hidden;
+    }
+
+    /* ─── ANIMATIONS ────────────────────────────────────────── */
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0; }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ─── LAYOUT ────────────────────────────────────────────── */
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+
+    section {
+      padding: 96px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ─── TOP BAR ───────────────────────────────────────────── */
+    .topbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: rgba(8, 8, 15, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .topbar-left {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .topbar-left .path-sep    { color: var(--border-hi); }
+    .topbar-left .path-active { color: var(--purple); }
+
+    .topbar-right {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      margin-right: 5px;
+      animation: blink 2.5s ease-in-out infinite;
+    }
+
+    .topbar-back {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: color 0.15s;
+    }
+
+    .topbar-back:hover { color: var(--purple); }
+
+    /* ─── HERO ──────────────────────────────────────────────── */
+    .hero {
+      min-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 120px 32px 80px;
+      position: relative;
+      max-width: 980px;
+      margin: 0 auto;
+      animation: fadeUp 0.7s ease both;
+    }
+
+    .hero-eyebrow {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      margin-bottom: 32px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hero-eyebrow::before {
+      content: '';
+      display: block;
+      width: 24px;
+      height: 1px;
+      background: var(--purple);
+    }
+
+    /* Terminal block */
+    .terminal {
+      background: rgba(13, 13, 26, 0.9);
+      border: 1px solid var(--border-med);
+      border-radius: 6px;
+      width: fit-content;
+      max-width: 520px;
+      margin-bottom: 48px;
+      overflow: hidden;
+    }
+
+    .terminal-bar {
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border);
+      padding: 9px 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .t-dot { width: 11px; height: 11px; border-radius: 50%; }
+    .t-dot.r { background: #FF5F57; }
+    .t-dot.y { background: #FEBC2E; }
+    .t-dot.g { background: #28C840; }
+
+    .terminal-title {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      margin-left: 8px;
+    }
+
+    .terminal-body {
+      padding: 16px 20px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .terminal-body p {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      line-height: 1.6;
+      white-space: nowrap;
+    }
+
+    .t-prompt { color: var(--purple); }
+    .t-ok     { color: var(--green); }
+    .t-cmd    { color: var(--text-dim); }
+    .t-str    { color: var(--orange); }
+    .t-flag   { color: var(--cyan); }
+    .t-cmt    { color: var(--text-muted); font-style: italic; }
+    .t-cursor {
+      display: inline-block;
+      color: var(--purple);
+      animation: blink 1s step-end infinite;
+    }
+
+    .hero-title {
+      font-family: var(--mono);
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-weight: 800;
+      line-height: 1.08;
+      letter-spacing: -0.02em;
+      margin-bottom: 24px;
+    }
+
+    .hero-title .accent-orange { color: var(--orange); }
+    .hero-title .accent-purple { color: var(--purple); }
+
+    .hero-sub {
+      font-size: 1.05rem;
+      color: var(--text-dim);
+      max-width: 520px;
+      margin-bottom: 40px;
+      line-height: 1.7;
+    }
+
+    .hero-nav {
+      display: flex;
+      gap: 0;
+      border: 1px solid var(--border);
+      width: fit-content;
+      flex-wrap: wrap;
+    }
+
+    .hero-nav a {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      border-right: 1px solid var(--border);
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .hero-nav a:last-child { border-right: none; }
+    .hero-nav a:hover { background: var(--purple-soft); color: var(--purple); }
+
+    .hero-nav a .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ─── SECTION HEADER ────────────────────────────────────── */
+    .sec-eyebrow {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--purple);
+      letter-spacing: 0.1em;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sec-eyebrow .num { color: var(--text-muted); }
+
+    .sec-title {
+      font-family: var(--mono);
+      font-size: clamp(1.5rem, 3vw, 2.1rem);
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      letter-spacing: -0.02em;
+    }
+
+    .sec-desc {
+      font-size: 1rem;
+      color: var(--text-dim);
+      max-width: 580px;
+      margin-bottom: 52px;
+    }
+
+    /* ─── SECTION 01 — WORKSHOPS ────────────────────────────── */
+    #workshops {
+      background-color: var(--bg-card);
+    }
+
+    .workshops-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: start;
+      margin-bottom: 52px;
+    }
+
+    /* Code block */
+    .code-block {
+      background: var(--bg);
+      border: 1px solid var(--border-med);
+      overflow: hidden;
+    }
+
+    .code-header {
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border);
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .code-header .filename { color: var(--text-muted); font-family: var(--mono); font-size: 0.7rem; }
+
+    .lang-badge {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      background: var(--orange-soft);
+      color: var(--orange);
+      padding: 2px 8px;
+      border: 1px solid rgba(249, 115, 22, 0.25);
+    }
+
+    .code-lines { padding: 20px 0; }
+
+    .code-row {
+      display: flex;
+      padding: 2px 0;
+    }
+
+    .code-row:hover { background: rgba(255,255,255,0.025); }
+
+    .ln {
+      width: 40px;
+      text-align: right;
+      padding-right: 16px;
+      color: var(--text-muted);
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      user-select: none;
+      flex-shrink: 0;
+      border-right: 1px solid var(--border);
+    }
+
+    .lc {
+      padding: 0 20px;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      white-space: pre;
+    }
+
+    .sy-kw   { color: #C084FC; }
+    .sy-fn   { color: var(--cyan); }
+    .sy-str  { color: var(--orange); }
+    .sy-cmt  { color: var(--text-muted); font-style: italic; }
+    .sy-ok   { color: var(--green); }
+    .sy-flag { color: var(--cyan); }
+    .sy-dim  { color: var(--text-dim); }
+
+    /* Workshop cards */
+    .workshop-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+
+    .w-card {
+      background: var(--bg);
+      padding: 28px 26px;
+      position: relative;
+      transition: background 0.2s;
+    }
+
+    .w-card:hover { background: var(--bg-elevated); }
+
+    .w-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: transparent;
+      transition: background 0.2s;
+    }
+
+    .w-card:hover::before { background: var(--orange); }
+
+    .w-card-idx {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    .w-card h3 {
+      font-family: var(--mono);
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .w-card p {
+      font-size: 0.88rem;
+      color: var(--text-dim);
+      line-height: 1.65;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 14px;
+    }
+
+    .tag {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      padding: 3px 9px;
+      border: 1px solid var(--border-med);
+      color: var(--text-muted);
+    }
+
+    .tag.orange { border-color: rgba(249,115,22,0.3); color: var(--orange); }
+    .tag.purple { border-color: rgba(168,85,247,0.3); color: var(--purple); }
+    .tag.cyan   { border-color: rgba(103,232,249,0.3); color: var(--cyan); }
+
+    /* Workshop text side */
+    .workshops-desc .sec-desc { margin-bottom: 28px; }
+
+    .feat-list {
+      list-style: none;
+      border: 1px solid var(--border);
+    }
+
+    .feat-item {
+      display: flex;
+      gap: 14px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+      color: var(--text-dim);
+      align-items: flex-start;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .feat-item:last-child { border-bottom: none; }
+    .feat-item:hover { background: var(--bg-elevated); color: var(--text); }
+
+    .feat-item .arrow {
+      font-family: var(--mono);
+      color: var(--orange);
+      flex-shrink: 0;
+      margin-top: 1px;
+      font-size: 0.85rem;
+    }
+
+    /* ─── SECTION 02 — MEETUPS ──────────────────────────────── */
+    .meetup-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .meetup-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--purple);
+      padding: 32px 28px;
+      transition: background 0.2s, border-left-color 0.2s;
+    }
+
+    .meetup-card:hover {
+      background: var(--purple-soft);
+      border-left-color: var(--orange);
+    }
+
+    .meetup-card-tag {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--purple);
+      letter-spacing: 0.08em;
+      margin-bottom: 20px;
+    }
+
+    .meetup-card h3 {
+      font-family: var(--mono);
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .meetup-card p {
+      font-size: 0.9rem;
+      color: var(--text-dim);
+      line-height: 1.65;
+    }
+
+    .meetup-card .note {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .meetup-card .note::before {
+      content: '//';
+      color: var(--purple);
+      flex-shrink: 0;
+    }
+
+    /* ─── SECTION 03 — CERTIFICATIONS ───────────────────────── */
+    #certs {
+      background-color: var(--bg-card);
+    }
+
+    .certs-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: start;
+    }
+
+    /* Roadmap visualization */
+    .roadmap {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .roadmap-level {
+      border: 1px solid var(--border);
+      padding: 22px 24px;
+      position: relative;
+      transition: border-color 0.2s;
+    }
+
+    .roadmap-level:hover { border-color: var(--border-hi); }
+
+    .level-tag {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .level-tag.orange { color: var(--orange); }
+    .level-tag.purple { color: var(--purple); }
+    .level-tag.dim    { color: var(--text-muted); }
+
+    .level-highlight {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      background: var(--orange-soft);
+      border: 1px solid rgba(249,115,22,0.25);
+      color: var(--orange);
+      padding: 3px 9px;
+      margin-left: 10px;
+      vertical-align: middle;
+    }
+
+    .cert-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      padding: 5px 12px;
+      border: 1px solid var(--border-med);
+      color: var(--text-dim);
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .chip:hover { background: var(--bg-elevated); }
+    .chip.orange { border-color: rgba(249,115,22,0.35); color: var(--orange); }
+    .chip.purple { border-color: rgba(168,85,247,0.35); color: var(--purple); }
+
+    .roadmap-connector {
+      width: 1px;
+      height: 28px;
+      background: var(--border-med);
+      margin-left: 36px;
+      position: relative;
+    }
+
+    .roadmap-connector::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: -3px;
+      width: 7px; height: 7px;
+      border-right: 1px solid var(--border-med);
+      border-bottom: 1px solid var(--border-med);
+      transform: rotate(45deg);
+    }
+
+    /* Cert activity cards */
+    .cert-activities {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .activity-card {
+      border: 1px solid var(--border);
+      padding: 24px 22px;
+      transition: background 0.2s, border-color 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .activity-card::after {
+      content: attr(data-num);
+      position: absolute;
+      top: -8px; right: 10px;
+      font-family: var(--mono);
+      font-size: 3.5rem;
+      font-weight: 800;
+      color: rgba(168, 85, 247, 0.05);
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    .activity-card:hover {
+      background: var(--purple-soft);
+      border-color: var(--purple);
+    }
+
+    .activity-label {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--purple);
+      letter-spacing: 0.1em;
+      margin-bottom: 10px;
+    }
+
+    .activity-card h3 {
+      font-family: var(--mono);
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .activity-card p {
+      font-size: 0.88rem;
+      color: var(--text-dim);
+      line-height: 1.65;
+    }
+
+    /* ─── FOOTER ────────────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 28px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .footer-left {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .footer-left span { color: var(--purple); }
+
+    .footer-right {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      display: flex;
+      gap: 20px;
+    }
+
+    .footer-right a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    .footer-right a:hover { color: var(--orange); }
+
+    /* ─── RESPONSIVE ────────────────────────────────────────── */
+    @media (max-width: 720px) {
+      .workshops-layout, .certs-layout { grid-template-columns: 1fr; gap: 40px; }
+      .hero-nav { flex-direction: column; }
+      .hero-nav a { border-right: none; border-bottom: 1px solid var(--border); }
+      .hero-nav a:last-child { border-bottom: none; }
+      footer { flex-direction: column; align-items: flex-start; }
+    }
+
+    @media (max-width: 480px) {
+      .container { padding: 0 20px; }
+      section { padding: 64px 0; }
+      .topbar { padding: 0 20px; }
+      .hero { padding: 100px 20px 60px; }
+      .r-hide { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── TOP BAR ─────────────────────────────────────────────── -->
+  <nav class="topbar">
+    <div class="topbar-left">
+      <span>~/</span>
+      <span class="path-sep">/</span>
+      <span>aws</span>
+      <span class="path-sep">/</span>
+      <span>student-builder-group</span>
+      <span class="path-sep">/</span>
+      <span class="path-active">eventos</span>
+    </div>
+    <div class="topbar-right">
+      <a href="index.html" class="topbar-back">← inicio</a>
+      <span class="r-hide"><span class="status-dot"></span>ACTIVO</span>
+      <span class="r-hide">2026</span>
+    </div>
+  </nav>
+
+  <!-- ── HERO ────────────────────────────────────────────────── -->
+  <div class="container">
+    <header class="hero">
+      <p class="hero-eyebrow">AWS STUDENT BUILDER GROUP &nbsp;·&nbsp; EVENTOS & ACTIVIDADES</p>
+
+      <div class="terminal">
+        <div class="terminal-bar">
+          <span class="t-dot r"></span>
+          <span class="t-dot y"></span>
+          <span class="t-dot g"></span>
+          <span class="terminal-title">aws-sbg events --list</span>
+        </div>
+        <div class="terminal-body">
+          <p><span class="t-prompt">$</span><span class="t-cmd"> aws-sbg events </span><span class="t-flag">--list</span></p>
+          <p><span class="t-ok">[01]</span><span class="t-str"> WORKSHOPS </span><span class="t-cmt">hands-on labs · proyectos reales</span></p>
+          <p><span class="t-ok">[02]</span><span class="t-str"> MEETUPS   </span><span class="t-cmt">speakers · community builders · heroes</span></p>
+          <p><span class="t-ok">[03]</span><span class="t-str"> CERTS     </span><span class="t-cmt">study groups · simulacros · roadmap</span></p>
+          <p><span class="t-cmt">// 3 tipos de eventos encontrados</span></p>
+          <p><span class="t-prompt">$</span><span class="t-cursor"> _</span></p>
+        </div>
+      </div>
+
+      <h1 class="hero-title">
+        Aprende.<br />
+        Construye.<br />
+        <span class="accent-orange">Certifícate</span><span class="accent-purple">.</span>
+      </h1>
+
+      <p class="hero-sub">
+        Tres tipos de eventos diseñados para que crezcas en la nube a tu ritmo:
+        desde abrir la consola por primera vez hasta prepararte para tu primera certificación AWS.
+      </p>
+
+      <nav class="hero-nav">
+        <a href="#workshops">
+          <span class="dot" style="background:var(--orange)"></span>
+          01_workshops
+        </a>
+        <a href="#meetups">
+          <span class="dot" style="background:var(--purple)"></span>
+          02_meetups
+        </a>
+        <a href="#certs">
+          <span class="dot" style="background:var(--cyan)"></span>
+          03_certificaciones
+        </a>
+      </nav>
+    </header>
+  </div>
+
+  <!-- ── 01 / WORKSHOPS ──────────────────────────────────────── -->
+  <section id="workshops">
+    <div class="container">
+
+      <div class="workshops-layout">
+
+        <div class="workshops-desc">
+          <p class="sec-eyebrow"><span class="num">// 01</span>&nbsp; WORKSHOPS.config</p>
+          <h2 class="sec-title">Técnicos,<br /><span style="color:var(--orange)">hands-on</span></h2>
+          <p class="sec-desc">
+            Nada de slides interminables. Abrimos la consola de AWS y construimos
+            cosas reales usando cuentas temporales gratuitas.
+          </p>
+
+          <ul class="feat-list">
+            <li class="feat-item">
+              <span class="arrow">→</span>
+              Labs en cuentas temporales de AWS gratuitas, sin necesidad de tarjeta de crédito.
+            </li>
+            <li class="feat-item">
+              <span class="arrow">→</span>
+              Sesiones de AWS Free Tier, Cloud Quest y Skill Builder.
+            </li>
+            <li class="feat-item">
+              <span class="arrow">→</span>
+              Proyectos reales: serverless, inteligencia artificial, almacenamiento, APIs.
+            </li>
+            <li class="feat-item">
+              <span class="arrow">→</span>
+              Todo lo que construyes lo puedes agregar a tu portafolio profesional.
+            </li>
+          </ul>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="filename">deploy-s3.sh</span>
+            <span class="lang-badge">BASH</span>
+          </div>
+          <div class="code-lines">
+            <div class="code-row"><span class="ln">1</span><span class="lc"><span class="sy-cmt">#!/bin/bash</span></span></div>
+            <div class="code-row"><span class="ln">2</span><span class="lc"><span class="sy-cmt"># Workshop: sitio web en S3</span></span></div>
+            <div class="code-row"><span class="ln">3</span><span class="lc"></span></div>
+            <div class="code-row"><span class="ln">4</span><span class="lc"><span class="sy-kw">BUCKET</span>=<span class="sy-str">"mi-primer-sitio-web"</span></span></div>
+            <div class="code-row"><span class="ln">5</span><span class="lc"></span></div>
+            <div class="code-row"><span class="ln">6</span><span class="lc"><span class="sy-fn">aws s3 mb</span> <span class="sy-str">s3://$BUCKET</span></span></div>
+            <div class="code-row"><span class="ln">7</span><span class="lc"></span></div>
+            <div class="code-row"><span class="ln">8</span><span class="lc"><span class="sy-fn">aws s3 cp</span> ./index.html \</span></div>
+            <div class="code-row"><span class="ln">9</span><span class="lc">  <span class="sy-str">s3://$BUCKET/</span></span></div>
+            <div class="code-row"><span class="ln">10</span><span class="lc"></span></div>
+            <div class="code-row"><span class="ln">11</span><span class="lc"><span class="sy-fn">aws s3 website</span> <span class="sy-str">s3://$BUCKET</span> \</span></div>
+            <div class="code-row"><span class="ln">12</span><span class="lc">  <span class="sy-flag">--index-document</span> index.html \</span></div>
+            <div class="code-row"><span class="ln">13</span><span class="lc">  <span class="sy-flag">--error-document</span> 404.html</span></div>
+            <div class="code-row"><span class="ln">14</span><span class="lc"></span></div>
+            <div class="code-row"><span class="ln">15</span><span class="lc"><span class="sy-ok"># ✓ Sitio desplegado en la nube</span></span></div>
+            <div class="code-row"><span class="ln">16</span><span class="lc"><span class="sy-ok"># ✓ Como este mismo sitio web</span></span></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Workshop type cards -->
+      <div class="workshop-cards">
+        <div class="w-card">
+          <p class="w-card-idx">[WS_01]</p>
+          <h3>Labs en la Nube</h3>
+          <p>Cuentas temporales de AWS gratuitas facilitadas por el equipo LATAM. Sin tarjeta, sin costo, sin riesgos.</p>
+          <div class="tag-row">
+            <span class="tag orange">free tier</span>
+            <span class="tag orange">sin costo</span>
+          </div>
+        </div>
+        <div class="w-card">
+          <p class="w-card-idx">[WS_02]</p>
+          <h3>Cloud Quest & Skill Builder</h3>
+          <p>Plataformas gamificadas y de aprendizaje oficial de AWS. Prácticas guiadas con feedback en tiempo real.</p>
+          <div class="tag-row">
+            <span class="tag cyan">gamificado</span>
+            <span class="tag cyan">oficial AWS</span>
+          </div>
+        </div>
+        <div class="w-card">
+          <p class="w-card-idx">[WS_03]</p>
+          <h3>Proyectos Reales</h3>
+          <p>Serverless con Lambda, sitios en S3, APIs con API Gateway, modelos de IA con Bedrock. Cosas que importan.</p>
+          <div class="tag-row">
+            <span class="tag purple">serverless</span>
+            <span class="tag purple">IA / ML</span>
+            <span class="tag purple">portafolio</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── 02 / MEETUPS ────────────────────────────────────────── -->
+  <section id="meetups">
+    <div class="container">
+      <p class="sec-eyebrow"><span class="num">// 02</span>&nbsp; MEETUPS.schema</p>
+      <h2 class="sec-title">Aprende de quien<br /><span style="color:var(--purple)">ya lo vivió</span></h2>
+      <p class="sec-desc">
+        Conectamos al grupo con personas de la industria que usan AWS en producción todos los días.
+        Charlas reales, sin ventas, sin marketing.
+      </p>
+
+      <div class="meetup-grid">
+
+        <div class="meetup-card">
+          <p class="meetup-card-tag">TIPO_A &nbsp;·&nbsp; BUILDERS</p>
+          <h3>AWS Community Builders</h3>
+          <p>
+            Profesionales reconocidos por AWS por sus contribuciones a la comunidad técnica.
+            Vienen a compartir experiencias reales: cómo aprendieron, cómo trabajan, qué errores cometieron.
+          </p>
+          <p class="note">
+            Hay un directorio de speakers disponible para el grupo. Podemos invitar a alguien de tu región para el siguiente evento.
+          </p>
+        </div>
+
+        <div class="meetup-card">
+          <p class="meetup-card-tag">TIPO_B &nbsp;·&nbsp; HEROES</p>
+          <h3>AWS Heroes</h3>
+          <p>
+            El nivel más alto de reconocimiento de AWS para miembros de la comunidad.
+            Expertos con años de experiencia que aportan perspectivas únicas sobre la nube en producción y a escala.
+          </p>
+          <p class="note">
+            Los AWS Heroes de LATAM son accesibles y están dispuestos a conectar con grupos estudiantiles. Solo hay que pedirlo.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 03 / CERTIFICATIONS ─────────────────────────────────── -->
+  <section id="certs">
+    <div class="container">
+
+      <div class="certs-layout">
+
+        <!-- Roadmap visual -->
+        <div>
+          <p class="sec-eyebrow"><span class="num">// 03</span>&nbsp; CERTIFICACIONES.roadmap</p>
+          <h2 class="sec-title">Tu ruta<br /><span style="color:var(--cyan)">en la nube</span></h2>
+          <p class="sec-desc" style="margin-bottom:36px;">
+            El ecosistema de certificaciones AWS va de lo general a lo especializado.
+            Aquí empezamos desde abajo y vamos juntos.
+          </p>
+
+          <div class="roadmap">
+            <div class="roadmap-level">
+              <p class="level-tag orange">
+                FOUNDATIONAL
+                <span class="level-highlight">← empezamos aquí</span>
+              </p>
+              <div class="cert-chips">
+                <span class="chip orange">Cloud Practitioner</span>
+                <span class="chip orange">AI Practitioner</span>
+              </div>
+            </div>
+
+            <div class="roadmap-connector"></div>
+
+            <div class="roadmap-level">
+              <p class="level-tag purple">ASSOCIATE</p>
+              <div class="cert-chips">
+                <span class="chip purple">Solutions Architect</span>
+                <span class="chip purple">Developer</span>
+                <span class="chip purple">SysOps Admin</span>
+              </div>
+            </div>
+
+            <div class="roadmap-connector"></div>
+
+            <div class="roadmap-level">
+              <p class="level-tag dim">PROFESSIONAL / SPECIALTY</p>
+              <div class="cert-chips">
+                <span class="chip">SA Professional</span>
+                <span class="chip">DevOps Pro</span>
+                <span class="chip">ML Specialty</span>
+                <span class="chip">Security</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Activity cards -->
+        <div class="cert-activities">
+
+          <div class="activity-card" data-num="01">
+            <p class="activity-label">ACTIVIDAD_01</p>
+            <h3>Sesión de Mapeo del Roadmap</h3>
+            <p>
+              Explicamos las diferentes rutas de certificación, cuánto toma cada una,
+              qué recursos usar y cómo planificar el estudio. Un Community Builder ya lo hizo
+              en 2 horas con gran éxito. Lo replicamos.
+            </p>
+          </div>
+
+          <div class="activity-card" data-num="02">
+            <p class="activity-label">ACTIVIDAD_02</p>
+            <h3>Study Groups</h3>
+            <p>
+              Reuniones recurrentes donde los miembros estudian juntos para un examen específico.
+              Cloud Practitioner y AI Practitioner son los más accesibles para empezar.
+              La presión de grupo ayuda a mantener el ritmo.
+            </p>
+          </div>
+
+          <div class="activity-card" data-num="03">
+            <p class="activity-label">ACTIVIDAD_03</p>
+            <h3>Simulacros de Examen</h3>
+            <p>
+              Práctica con preguntas reales usando AWS Skill Builder.
+              Revisamos respuestas en grupo, discutimos conceptos y reforzamos los temas más difíciles antes del examen real.
+            </p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ───────────────────────────────────────────────── -->
+  <footer class="container">
+    <p class="footer-left">
+      <span>AWS Student Builder Group</span> &nbsp;·&nbsp; eventos & actividades
+    </p>
+    <div class="footer-right">
+      <a href="index.html">← inicio</a>
+      <a href="#workshops">01_workshops</a>
+      <a href="#meetups">02_meetups</a>
+      <a href="#certs">03_certs</a>
+    </div>
+  </footer>
+
+</body>
+</html>

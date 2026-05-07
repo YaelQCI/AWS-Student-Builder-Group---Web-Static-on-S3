@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AWS Student Builder Group</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ─── TOKENS ────────────────────────────────────────────── */
+    :root {
+      --bg:           #08080F;
+      --bg-card:      #0E0E1C;
+      --bg-elevated:  #13132A;
+      --border:       rgba(255, 255, 255, 0.06);
+      --border-med:   rgba(255, 255, 255, 0.10);
+      --border-hi:    rgba(255, 255, 255, 0.18);
+      --purple:       #A855F7;
+      --purple-soft:  rgba(168, 85, 247, 0.12);
+      --purple-glow:  rgba(168, 85, 247, 0.30);
+      --orange:       #F97316;
+      --orange-soft:  rgba(249, 115, 22, 0.12);
+      --orange-glow:  rgba(249, 115, 22, 0.30);
+      --green:        #4ADE80;
+      --text:         #E2E8F0;
+      --text-dim:     #94A3B8;
+      --text-muted:   #475569;
+      --mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+      --sans: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    /* ─── RESET ─────────────────────────────────────────────── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--sans);
+      background-color: var(--bg);
+      background-image:
+        linear-gradient(rgba(168, 85, 247, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(168, 85, 247, 0.035) 1px, transparent 1px);
+      background-size: 40px 40px;
+      color: var(--text);
+      line-height: 1.65;
+      overflow-x: hidden;
+    }
+
+    /* ─── ANIMATIONS ────────────────────────────────────────── */
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0; }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse-purple {
+      0%, 100% { box-shadow: 0 0 0 0 var(--purple-glow); }
+      50%       { box-shadow: 0 0 24px 4px var(--purple-glow); }
+    }
+
+    /* ─── GLOBAL LAYOUT ─────────────────────────────────────── */
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+
+    section {
+      padding: 96px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ─── TOP BAR ───────────────────────────────────────────── */
+    .topbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: rgba(8, 8, 15, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .topbar-left {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .topbar-left .path-sep { color: var(--border-hi); }
+    .topbar-left .path-active { color: var(--purple); }
+
+    .topbar-right {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      margin-right: 5px;
+      animation: blink 2.5s ease-in-out infinite;
+    }
+
+    /* ─── HERO ──────────────────────────────────────────────── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 120px 32px 80px;
+      position: relative;
+      max-width: 980px;
+      margin: 0 auto;
+      animation: fadeUp 0.7s ease both;
+    }
+
+    .hero-eyebrow {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      margin-bottom: 32px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hero-eyebrow::before {
+      content: '';
+      display: block;
+      width: 24px;
+      height: 1px;
+      background: var(--purple);
+    }
+
+    /* Terminal block */
+    .terminal {
+      background: rgba(13, 13, 26, 0.9);
+      border: 1px solid var(--border-med);
+      border-radius: 6px;
+      width: fit-content;
+      max-width: 480px;
+      margin-bottom: 48px;
+      overflow: hidden;
+    }
+
+    .terminal-bar {
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border);
+      padding: 9px 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .t-dot {
+      width: 11px; height: 11px;
+      border-radius: 50%;
+    }
+    .t-dot.r { background: #FF5F57; }
+    .t-dot.y { background: #FEBC2E; }
+    .t-dot.g { background: #28C840; }
+
+    .terminal-title {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      margin-left: 8px;
+    }
+
+    .terminal-body {
+      padding: 16px 20px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .terminal-body p {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      line-height: 1.6;
+      white-space: nowrap;
+    }
+
+    .t-prompt { color: var(--purple); }
+    .t-ok     { color: var(--green); }
+    .t-warn   { color: var(--orange); }
+    .t-cursor {
+      display: inline-block;
+      color: var(--purple);
+      animation: blink 1s step-end infinite;
+    }
+    .t-cmd    { color: var(--text-dim); }
+    .t-str    { color: var(--orange); }
+    .t-flag   { color: #67E8F9; }
+
+    /* Main title */
+    .hero-title {
+      font-family: var(--mono);
+      font-size: clamp(2.4rem, 5.5vw, 4.2rem);
+      font-weight: 800;
+      line-height: 1.08;
+      letter-spacing: -0.02em;
+      margin-bottom: 24px;
+    }
+
+    .hero-title .accent-purple { color: var(--purple); }
+    .hero-title .accent-orange { color: var(--orange); }
+
+    .hero-sub {
+      font-size: 1.05rem;
+      color: var(--text-dim);
+      max-width: 520px;
+      margin-bottom: 40px;
+      line-height: 1.7;
+    }
+
+    .hero-cta-row {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--purple);
+      color: #fff;
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 12px 24px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      letter-spacing: 0.04em;
+      transition: background 0.2s, box-shadow 0.2s;
+      clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+    }
+
+    .btn-primary:hover {
+      background: #B565F9;
+      box-shadow: 0 0 28px var(--purple-glow);
+    }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--border-med);
+      color: var(--text-dim);
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      padding: 12px 24px;
+      text-decoration: none;
+      letter-spacing: 0.04em;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--purple);
+      color: var(--purple);
+    }
+
+    .hero-meta {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    /* Corner coordinates decoration */
+    .hero-coords {
+      position: absolute;
+      bottom: 48px;
+      right: 0;
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      text-align: right;
+      line-height: 1.8;
+    }
+
+    .hero-coords span { color: var(--purple); }
+
+    /* ─── SECTION HEADER ────────────────────────────────────── */
+    .sec-eyebrow {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--purple);
+      letter-spacing: 0.1em;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sec-eyebrow .num { color: var(--text-muted); }
+
+    .sec-title {
+      font-family: var(--mono);
+      font-size: clamp(1.5rem, 3vw, 2.1rem);
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      letter-spacing: -0.02em;
+    }
+
+    .sec-desc {
+      font-size: 1rem;
+      color: var(--text-dim);
+      max-width: 560px;
+      margin-bottom: 52px;
+    }
+
+    /* ─── SECTION 01 — WHAT ─────────────────────────────────── */
+    .what-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+
+    .what-card {
+      background: var(--bg-card);
+      padding: 32px 28px;
+      position: relative;
+      transition: background 0.2s;
+    }
+
+    .what-card:hover {
+      background: var(--bg-elevated);
+    }
+
+    .what-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 2px;
+      background: transparent;
+      transition: background 0.2s;
+    }
+
+    .what-card:hover::before {
+      background: var(--purple);
+    }
+
+    .card-idx {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+
+    .card-icon-geo {
+      width: 40px; height: 40px;
+      margin-bottom: 16px;
+      position: relative;
+    }
+
+    .what-card h3 {
+      font-family: var(--mono);
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: var(--text);
+    }
+
+    .what-card p {
+      font-size: 0.9rem;
+      color: var(--text-dim);
+      line-height: 1.65;
+    }
+
+    /* SVG icon shapes */
+    .geo-shape {
+      fill: none;
+      stroke-width: 1.5;
+    }
+
+    /* ─── SECTION 02 — KNOWLEDGE ────────────────────────────── */
+    #knowledge {
+      background-color: var(--bg-card);
+    }
+
+    .knowledge-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: start;
+    }
+
+    .code-block {
+      background: var(--bg);
+      border: 1px solid var(--border-med);
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      overflow: hidden;
+    }
+
+    .code-header {
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border);
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .code-header .filename {
+      color: var(--text-muted);
+      font-size: 0.7rem;
+    }
+
+    .code-header .lang-badge {
+      font-size: 0.62rem;
+      background: var(--purple-soft);
+      color: var(--purple);
+      padding: 2px 8px;
+      border: 1px solid rgba(168, 85, 247, 0.25);
+    }
+
+    .code-lines {
+      padding: 20px 0;
+    }
+
+    .code-row {
+      display: flex;
+      gap: 0;
+      padding: 2px 0;
+    }
+
+    .code-row:hover { background: rgba(255,255,255,0.025); }
+
+    .ln {
+      width: 40px;
+      text-align: right;
+      padding-right: 16px;
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      user-select: none;
+      flex-shrink: 0;
+      border-right: 1px solid var(--border);
+    }
+
+    .lc {
+      padding: 0 20px;
+      white-space: pre;
+    }
+
+    .syn-kw     { color: #C084FC; }
+    .syn-fn     { color: #67E8F9; }
+    .syn-str    { color: var(--orange); }
+    .syn-cmt    { color: var(--text-muted); font-style: italic; }
+    .syn-val    { color: var(--green); }
+    .syn-punct  { color: var(--text-dim); }
+
+    .knowledge-text .sec-desc {
+      margin-bottom: 32px;
+    }
+
+    .kn-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      border: 1px solid var(--border);
+    }
+
+    .kn-item {
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      font-size: 0.92rem;
+      color: var(--text-dim);
+      transition: background 0.15s;
+    }
+
+    .kn-item:last-child { border-bottom: none; }
+    .kn-item:hover { background: var(--bg-elevated); color: var(--text); }
+
+    .kn-item .kn-arrow {
+      font-family: var(--mono);
+      color: var(--orange);
+      font-size: 0.85rem;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* ─── SECTION 03 — LEARNING ─────────────────────────────── */
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 20px;
+    }
+
+    .step-card {
+      border: 1px solid var(--border);
+      padding: 32px 26px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .step-card:hover {
+      border-color: var(--orange);
+      background: var(--orange-soft);
+    }
+
+    .step-card::after {
+      content: attr(data-n);
+      position: absolute;
+      top: -10px; right: 12px;
+      font-family: var(--mono);
+      font-size: 4.5rem;
+      font-weight: 800;
+      color: rgba(249, 115, 22, 0.06);
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    .step-label {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--orange);
+      letter-spacing: 0.1em;
+      margin-bottom: 16px;
+    }
+
+    .step-card h3 {
+      font-family: var(--mono);
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .step-card p {
+      font-size: 0.9rem;
+      color: var(--text-dim);
+    }
+
+    /* ─── SECTION 04 — WHY ──────────────────────────────────── */
+    .why-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .why-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--purple);
+      padding: 28px 24px;
+      transition: border-left-color 0.2s, background 0.2s;
+    }
+
+    .why-card:hover {
+      background: var(--purple-soft);
+      border-left-color: var(--orange);
+    }
+
+    .why-icon {
+      width: 36px; height: 36px;
+      margin-bottom: 16px;
+    }
+
+    .why-card h3 {
+      font-family: var(--mono);
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .why-card p {
+      font-size: 0.88rem;
+      color: var(--text-dim);
+      line-height: 1.65;
+    }
+
+    /* ─── QUOTE ─────────────────────────────────────────────── */
+    .quote-section {
+      border-top: 1px solid var(--border);
+      padding: 96px 32px;
+      text-align: center;
+      position: relative;
+    }
+
+    .quote-section::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, rgba(168, 85, 247, 0.07) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    .quote-tag {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+      margin-bottom: 28px;
+    }
+
+    .quote-tag span { color: var(--purple); }
+
+    blockquote {
+      max-width: 700px;
+      margin: 0 auto 28px;
+      font-size: clamp(1.05rem, 2vw, 1.3rem);
+      font-style: italic;
+      color: var(--text-dim);
+      line-height: 1.75;
+      border-left: 2px solid var(--purple);
+      padding-left: 28px;
+      text-align: left;
+    }
+
+    blockquote strong {
+      color: var(--text);
+      font-style: normal;
+    }
+
+    .quote-attr {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      max-width: 700px;
+      margin: 0 auto;
+      padding-left: calc(28px + 2px);
+      text-align: left;
+    }
+
+    /* ─── FOOTER ────────────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 28px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .footer-left {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .footer-left span { color: var(--purple); }
+
+    .footer-right {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      display: flex;
+      gap: 20px;
+    }
+
+    .footer-right a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    .footer-right a:hover { color: var(--orange); }
+
+    /* ─── RESPONSIVE ────────────────────────────────────────── */
+    @media (max-width: 720px) {
+      .knowledge-layout { grid-template-columns: 1fr; gap: 40px; }
+      .hero-coords { display: none; }
+      .topbar-right .r-hide { display: none; }
+      footer { flex-direction: column; align-items: flex-start; }
+      blockquote, .quote-attr { padding-left: 20px; }
+    }
+
+    @media (max-width: 480px) {
+      .hero-title { letter-spacing: -0.01em; }
+      .container { padding: 0 20px; }
+      section { padding: 64px 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── TOP BAR ─────────────────────────────────────────────── -->
+  <nav class="topbar">
+    <div class="topbar-left">
+      <span>~/</span>
+      <span class="path-sep">/</span>
+      <span>aws</span>
+      <span class="path-sep">/</span>
+      <span class="path-active">student-builder-group-upslp</span>
+    </div>
+    <div class="topbar-right">
+      <span><span class="status-dot"></span>ACTIVO</span>
+      <span class="r-hide">v2.0.0</span>
+      <span class="r-hide">2026</span>
+    </div>
+  </nav>
+
+  <!-- ── HERO ────────────────────────────────────────────────── -->
+  <div class="container">
+    <header class="hero">
+      <p class="hero-eyebrow">AWS STUDENT BUILDER GROUP UPSLP &nbsp;·&nbsp; ANTES: AWS CLOUD CLUB UPSLP</p>
+
+      <div class="terminal">
+        <div class="terminal-bar">
+          <span class="t-dot r"></span>
+          <span class="t-dot y"></span>
+          <span class="t-dot g"></span>
+          <span class="terminal-title">aws-sbg — bash — 80×20</span>
+        </div>
+        <div class="terminal-body">
+          <p>
+            <span class="t-prompt">$</span>
+            <span class="t-cmd"> aws-sbg </span>
+            <span class="t-flag">--init</span>
+            <span class="t-str"> "peer-to-peer"</span>
+          </p>
+          <p><span class="t-ok">✓</span><span class="t-cmd"> Comunidad inicializada</span></p>
+          <p><span class="t-ok">✓</span><span class="t-cmd"> Modo: estudiantes para estudiantes</span></p>
+          <p><span class="t-ok">✓</span><span class="t-cmd"> Respaldado por Amazon Web Services</span></p>
+          <p><span class="t-warn">!</span><span class="t-cmd"> Sin jerarquías. Sin miedos. Solo práctica.</span></p>
+          <p><span class="t-prompt">$</span><span class="t-cursor"> _</span></p>
+        </div>
+      </div>
+
+      <h1 class="hero-title">
+        AWS<br />
+        Student<br />
+        <span class="accent-purple">Builder</span><br />
+        <span class="accent-purple">Group</span><br />
+        <span class="accent-orange">UPSLP</span>
+      </h1>
+
+      <p class="hero-sub">
+        Una comunidad horizontal donde el conocimiento fluye entre pares.
+        Aprendemos la nube juntos, con las manos en la consola desde el día uno.
+      </p>
+
+      <div class="hero-cta-row">
+        <a href="#que-es" class="btn-primary">
+          <span>→</span> Explorar el grupo
+        </a>
+        <a href="events.html" class="btn-ghost">
+          Ver eventos
+        </a>
+        <span class="hero-meta">// sin experiencia previa requerida</span>
+      </div>
+
+      <div class="hero-coords">
+        X: <span>00.0</span> &nbsp; Y: <span>00.0</span><br />
+        SEC: <span>HERO</span><br />
+        [<span>ES</span>]
+      </div>
+    </header>
+  </div>
+
+  <!-- ── 01 / QUÉ ES ─────────────────────────────────────────── -->
+  <section id="que-es">
+    <div class="container">
+      <p class="sec-eyebrow"><span class="num">// 01</span>&nbsp; DEFINICION.md</p>
+      <h2 class="sec-title">¿Qué es este grupo?</h2>
+      <p class="sec-desc">
+        Un espacio <strong>hecho por estudiantes y para estudiantes</strong>.
+        No hay jerarquías de profesor-alumno; todos estamos en la misma etapa de aprendizaje,
+        con la misma curiosidad por la nube.
+      </p>
+
+      <div class="what-grid">
+        <div class="what-card">
+          <p class="card-idx">[00]</p>
+          <svg class="card-icon-geo" viewBox="0 0 40 40">
+            <rect x="4" y="4" width="32" height="32" class="geo-shape" stroke="#A855F7" />
+            <rect x="12" y="12" width="16" height="16" class="geo-shape" stroke="#A855F7" opacity="0.4" />
+          </svg>
+          <h3>Comunidad de Pares</h3>
+          <p>Somos compañeros de carrera. Aquí nadie nació siendo experto y nadie espera que lo seas.</p>
+        </div>
+        <div class="what-card">
+          <p class="card-idx">[01]</p>
+          <svg class="card-icon-geo" viewBox="0 0 40 40">
+            <circle cx="20" cy="20" r="14" class="geo-shape" stroke="#F97316" />
+            <line x1="20" y1="6" x2="20" y2="34" class="geo-shape" stroke="#F97316" opacity="0.4" />
+            <line x1="6" y1="20" x2="34" y2="20" class="geo-shape" stroke="#F97316" opacity="0.4" />
+          </svg>
+          <h3>Sin Miedos</h3>
+          <p>No hay preguntas tontas. Este es el lugar ideal para preguntar cualquier cosa sobre cloud.</p>
+        </div>
+        <div class="what-card">
+          <p class="card-idx">[02]</p>
+          <svg class="card-icon-geo" viewBox="0 0 40 40">
+            <polygon points="20,4 36,34 4,34" class="geo-shape" stroke="#A855F7" />
+            <line x1="20" y1="14" x2="20" y2="28" class="geo-shape" stroke="#A855F7" opacity="0.4" />
+          </svg>
+          <h3>Respaldado por AWS</h3>
+          <p>Contamos con el apoyo oficial de Amazon Web Services: recursos, eventos y visibilidad global.</p>
+        </div>
+        <div class="what-card">
+          <p class="card-idx">[03]</p>
+          <svg class="card-icon-geo" viewBox="0 0 40 40">
+            <rect x="4" y="14" width="32" height="22" class="geo-shape" stroke="#F97316" />
+            <polyline points="12,14 20,4 28,14" class="geo-shape" stroke="#F97316" opacity="0.5" />
+          </svg>
+          <h3>Liderado por Estudiantes</h3>
+          <p>Organizado por estudiantes de tu misma institución, no por instructores externos.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 02 / KNOWLEDGE ──────────────────────────────────────── -->
+  <section id="knowledge">
+    <div class="container">
+      <div class="knowledge-layout">
+
+        <div class="knowledge-text">
+          <p class="sec-eyebrow"><span class="num">// 02</span>&nbsp; ESENCIA.ts</p>
+          <h2 class="sec-title">El conocimiento<br />no se guarda,<br /><span style="color:var(--orange)">se comparte</span></h2>
+          <p class="sec-desc">
+            La base del grupo: si alguien domina un tema, ese conocimiento se pone
+            sobre la mesa para todos. Aprendemos de los errores de otros y de los aciertos propios.
+          </p>
+
+          <ul class="kn-list">
+            <li class="kn-item">
+              <span class="kn-arrow">→</span>
+              Si descubres un truco en la consola de AWS, aquí tienes un lugar donde contarlo.
+            </li>
+            <li class="kn-item">
+              <span class="kn-arrow">→</span>
+              Los más avanzados enseñan a quienes empiezan. Los que empiezan traen preguntas frescas.
+            </li>
+            <li class="kn-item">
+              <span class="kn-arrow">→</span>
+              El grupo crece con lo que cada quien aporta. Sin filtros, sin jerarquías.
+            </li>
+          </ul>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="filename">knowledge.ts</span>
+            <span class="lang-badge">TYPESCRIPT</span>
+          </div>
+          <div class="code-lines">
+            <div class="code-row"><span class="ln">1</span><span class="lc"><span class="syn-cmt">// Principios del grupo</span></span></div>
+            <div class="code-row"><span class="ln">2</span><span class="lc"></span></div>
+            <div class="code-row"><span class="ln">3</span><span class="lc"><span class="syn-kw">const</span> <span class="syn-fn">group</span> <span class="syn-punct">=</span> <span class="syn-punct">{</span></span></div>
+            <div class="code-row"><span class="ln">4</span><span class="lc">  nombre<span class="syn-punct">:</span> <span class="syn-str">"AWS Student Builder"</span><span class="syn-punct">,</span></span></div>
+            <div class="code-row"><span class="ln">5</span><span class="lc">  jerarquias<span class="syn-punct">:</span> <span class="syn-val">false</span><span class="syn-punct">,</span></span></div>
+            <div class="code-row"><span class="ln">6</span><span class="lc">  miedos<span class="syn-punct">:</span> <span class="syn-val">false</span><span class="syn-punct">,</span></span></div>
+            <div class="code-row"><span class="ln">7</span><span class="lc">  aprendizaje<span class="syn-punct">:</span> <span class="syn-str">"peer-to-peer"</span><span class="syn-punct">,</span></span></div>
+            <div class="code-row"><span class="ln">8</span><span class="lc"><span class="syn-punct">};</span></span></div>
+            <div class="code-row"><span class="ln">9</span><span class="lc"></span></div>
+            <div class="code-row"><span class="ln">10</span><span class="lc"><span class="syn-kw">function</span> <span class="syn-fn">compartir</span><span class="syn-punct">(</span></span></div>
+            <div class="code-row"><span class="ln">11</span><span class="lc">  conocimiento<span class="syn-punct">:</span> <span class="syn-str">string</span></span></div>
+            <div class="code-row"><span class="ln">12</span><span class="lc"><span class="syn-punct">)</span> <span class="syn-punct">{</span></span></div>
+            <div class="code-row"><span class="ln">13</span><span class="lc">  <span class="syn-cmt">// todos se benefician</span></span></div>
+            <div class="code-row"><span class="ln">14</span><span class="lc">  <span class="syn-kw">return</span> group<span class="syn-punct">.</span><span class="syn-fn">crecer</span><span class="syn-punct">(</span></span></div>
+            <div class="code-row"><span class="ln">15</span><span class="lc">    conocimiento</span></div>
+            <div class="code-row"><span class="ln">16</span><span class="lc">  <span class="syn-punct">);</span></span></div>
+            <div class="code-row"><span class="ln">17</span><span class="lc"><span class="syn-punct">}</span></span></div>
+            <div class="code-row"><span class="ln">18</span><span class="lc"></span></div>
+            <div class="code-row"><span class="ln">19</span><span class="lc"><span class="syn-fn">compartir</span><span class="syn-punct">(</span><span class="syn-str">"AWS + cloud"</span><span class="syn-punct">);</span></span></div>
+            <div class="code-row"><span class="ln">20</span><span class="lc"><span class="syn-cmt">// → todos crecen juntos ✓</span></span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 03 / LEARNING ───────────────────────────────────────── -->
+  <section id="aprendizaje">
+    <div class="container">
+      <p class="sec-eyebrow"><span class="num">// 03</span>&nbsp; APRENDIZAJE.config</p>
+      <h2 class="sec-title">Práctico y<br /><span style="color:var(--orange)">sin filtros</span></h2>
+      <p class="sec-desc">
+        Queremos que conozcas AWS de la forma más honesta: usándolo.
+        Nada de manuales eternos. Abrimos la consola y vemos qué pasa cuando picamos un botón.
+      </p>
+
+      <div class="steps-grid">
+        <div class="step-card" data-n="01">
+          <p class="step-label">STEP_01</p>
+          <h3>Abrimos la Consola</h3>
+          <p>El día uno ya tienes la consola de AWS en frente y empiezas a explorar servicios reales.</p>
+        </div>
+        <div class="step-card" data-n="02">
+          <p class="step-label">STEP_02</p>
+          <h3>Ejercicios Guiados</h3>
+          <p>Paso a paso. Aunque sea tu primera vez en la nube, te vas a ir a casa habiendo construido algo.</p>
+        </div>
+        <div class="step-card" data-n="03">
+          <p class="step-label">STEP_03</p>
+          <h3>Tu Propio Ritmo</h3>
+          <p>Cero agobios. Familiarízate con S3, EC2 y más de forma relajada. No hay exámenes.</p>
+        </div>
+        <div class="step-card" data-n="04">
+          <p class="step-label">STEP_04</p>
+          <h3>Proyectos Reales</h3>
+          <p>No solo practicas. Construyes cosas tangibles que puedes mostrar y agregar a tu portafolio.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 04 / WHY ─────────────────────────────────────────────── -->
+  <section id="por-que">
+    <div class="container">
+      <p class="sec-eyebrow"><span class="num">// 04</span>&nbsp; RAZONES.json</p>
+      <h2 class="sec-title">¿Por qué<br /><span style="color:var(--purple)">unirte?</span></h2>
+      <p class="sec-desc">
+        Aprender AWS en solitario puede ser abrumador. En comunidad es más rápido,
+        más divertido y deja experiencia real que te llevas al mundo profesional.
+      </p>
+
+      <div class="why-grid">
+        <div class="why-card">
+          <svg class="why-icon" viewBox="0 0 36 36">
+            <circle cx="18" cy="12" r="5" fill="none" stroke="#A855F7" stroke-width="1.5"/>
+            <circle cx="8" cy="22" r="4" fill="none" stroke="#A855F7" stroke-width="1.5" opacity="0.5"/>
+            <circle cx="28" cy="22" r="4" fill="none" stroke="#A855F7" stroke-width="1.5" opacity="0.5"/>
+            <line x1="18" y1="17" x2="9" y2="22" stroke="#A855F7" stroke-width="1" opacity="0.4"/>
+            <line x1="18" y1="17" x2="27" y2="22" stroke="#A855F7" stroke-width="1" opacity="0.4"/>
+          </svg>
+          <h3>No caminas solo</h3>
+          <p>Siempre habrá alguien que ya pasó por donde tú estás y puede orientarte sin que te cueste nada.</p>
+        </div>
+        <div class="why-card">
+          <svg class="why-icon" viewBox="0 0 36 36">
+            <rect x="4" y="10" width="28" height="18" fill="none" stroke="#A855F7" stroke-width="1.5"/>
+            <line x1="10" y1="16" x2="26" y2="16" stroke="#A855F7" stroke-width="1" opacity="0.5"/>
+            <line x1="10" y1="20" x2="20" y2="20" stroke="#A855F7" stroke-width="1" opacity="0.5"/>
+          </svg>
+          <h3>Experiencia real</h3>
+          <p>Todo lo que "piques" aquí es experiencia que te llevas para cuando salgas al mundo profesional.</p>
+        </div>
+        <div class="why-card">
+          <svg class="why-icon" viewBox="0 0 36 36">
+            <polygon points="18,4 32,28 4,28" fill="none" stroke="#A855F7" stroke-width="1.5"/>
+            <line x1="18" y1="12" x2="18" y2="22" stroke="#A855F7" stroke-width="1" opacity="0.5"/>
+            <circle cx="18" cy="25" r="1.5" fill="#A855F7" opacity="0.7"/>
+          </svg>
+          <h3>Conexiones</h3>
+          <p>Conocerás personas con tus mismos intereses, potenciales co-fundadores de proyectos futuros.</p>
+        </div>
+        <div class="why-card">
+          <svg class="why-icon" viewBox="0 0 36 36">
+            <rect x="6" y="6" width="24" height="24" fill="none" stroke="#A855F7" stroke-width="1.5"/>
+            <polyline points="11,20 16,15 21,19 25,13" fill="none" stroke="#A855F7" stroke-width="1.5" opacity="0.8"/>
+          </svg>
+          <h3>Skills en la nube</h3>
+          <p>La nube es el estándar de la industria. Aprender AWS hoy es una ventaja competitiva enorme.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── QUOTE ────────────────────────────────────────────────── -->
+  <div class="quote-section">
+    <p class="quote-tag">// <span>MENSAJE_FINAL</span></p>
+    <blockquote>
+      Aquí nadie nació siendo experto. Este grupo es para que todos crezcamos
+      compartiendo lo que sabemos, <strong>por poco o mucho que sea</strong>.
+      Venimos a aprender, a experimentar y, sobre todo,
+      a ayudarnos entre nosotros a construir el futuro en la nube.
+    </blockquote>
+    <p class="quote-attr">— AWS Student Builder Group, 2026</p>
+  </div>
+
+  <!-- ── FOOTER ───────────────────────────────────────────────── -->
+  <footer class="container">
+    <p class="footer-left">
+      <span>AWS Student Builder Group UPSLP</span> &nbsp;·&nbsp; antes: AWS Cloud Club UPSLP
+    </p>
+    <div class="footer-right">
+      <a href="#que-es">01_qué_es</a>
+      <a href="#knowledge">02_esencia</a>
+      <a href="#aprendizaje">03_aprendizaje</a>
+      <a href="#por-que">04_por_qué</a>
+      <a href="events.html">05_eventos</a>
+    </div>
+  </footer>
+
+</body>
+</html>
